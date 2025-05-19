@@ -125,92 +125,96 @@ Send a JSON object containing the user’s credentials:
 
 ---
 
-### 📘 `GET /employees`
+### 📘 `GET /employees/:id`
 
-Retrieve a list of employees, including specific fields and optional related data (such as employee photos and current status).
+Retrieve detailed information about a specific employee, including their organizational structure, assignments, and relationships.
 
 ---
 
 #### 📍 **Endpoint**
 
 ```
-GET https://gateway-test.risepeople.com/employees?include=employee_photo&fields[employees]=name,employee_photo,current_status
+GET https://gateway-test.risepeople.com/employees/295029?include=departments,teams,locations,primary_team,primary_department,primary_location,primary_manager,managers,employee_photo,employment_positions,organization&fields[departments]=name&fields[teams]=name&fields[locations]=name
 ```
 
 ---
 
 #### 📥 **Headers**
 
-| Header         | Value                                             | Description                                  |
-|----------------|---------------------------------------------------|----------------------------------------------|
-| `Accept`       | `application/json, text/plain, */*`               | Accepts JSON or other media types            |
-| `Authorization`| `Bearer <JWT>`                                    | Bearer token used to authenticate the request|
+| Header           | Value                                 | Description                                       |
+|------------------|---------------------------------------|---------------------------------------------------|
+| `Accept`         | `application/json, text/plain, */*`   | Expected response format                          |
+| `Authorization`  | `Bearer <JWT>`                        | JWT token for authorization                       |
 
-> 🔐 The actual JWT token is passed directly in the request. In production docs, you should **redact or obfuscate it** for security.
-
----
-
-#### 🧾 **Query Parameters**
-
-| Parameter                      | Type     | Description                                                                 |
-|--------------------------------|----------|-----------------------------------------------------------------------------|
-| `include=employee_photo`       | string   | Requests inclusion of the related `employee_photo` resource                |
-| `fields[employees]=name,employee_photo,current_status` | string | Restricts the fields returned for each employee object                     |
-
-This pattern follows the [JSON:API](https://jsonapi.org/) spec for sparse fieldsets and resource inclusion.
+> ⚠️ For security, replace the actual token with `<JWT>` in documentation.
 
 ---
 
-#### 🧪 **Sample Response**
+#### 🔍 **Query Parameters**
+
+| Parameter                       | Type     | Description                                                       |
+|----------------------------------|----------|-------------------------------------------------------------------|
+| `include`                        | string   | Comma-separated list of related resources to include              |
+| `fields[departments]=name`      | string   | Restrict department fields to only include the `name` attribute   |
+| `fields[teams]=name`            | string   | Restrict team fields to only include the `name` attribute         |
+| `fields[locations]=name`        | string   | Restrict location fields to only include the `name` attribute     |
+
+##### Included Resources:
+
+- `departments`, `teams`, `locations`
+- `primary_team`, `primary_department`, `primary_location`
+- `primary_manager`, `managers`
+- `employee_photo`
+- `employment_positions`
+- `organization`
+
+---
+
+#### 🧪 **Sample Response Structure**
 
 ```json
 {
-  "data": [
-    {
-      "id": "1234",
-      "type": "employee",
-      "attributes": {
-        "name": "Jane Doe",
-        "employee_photo": {
-          "url": "https://cdn.example.com/photos/1234.jpg"
-        },
-        "current_status": "Active"
-      }
+  "data": {
+    "id": "295029",
+    "type": "employee",
+    "attributes": {
+      "name": "John Doe",
+      "current_status": "Active",
+      ...
+    },
+    "relationships": {
+      "departments": { "data": [...] },
+      "primary_manager": { "data": { "id": "1234", "type": "manager" } },
+      ...
     }
-  ],
+  },
   "included": [
     {
-      "type": "employee_photo",
-      "id": "photo-1234",
-      "attributes": {
-        "url": "https://cdn.example.com/photos/1234.jpg"
-      }
-    }
+      "type": "department",
+      "id": "dept-1",
+      "attributes": { "name": "Engineering" }
+    },
+    {
+      "type": "team",
+      "id": "team-1",
+      "attributes": { "name": "Mobile" }
+    },
+    ...
   ]
 }
 ```
 
 ---
 
-#### 📤 **Response Fields**
+#### 🔐 **Authentication**
 
-| Field            | Type     | Description                             |
-|------------------|----------|-----------------------------------------|
-| `name`           | string   | Full name of the employee               |
-| `employee_photo` | object   | Photo resource associated with employee |
-| `current_status` | string   | Employment status (e.g., Active, Terminated) |
-
----
-
-#### 🔒 **Authentication**
-
-- Requires a **valid JWT** passed in the `Authorization` header.
-- The token must contain scopes/permissions to access employee data.
+- Requires a valid JWT token with permission to access employee data.
+- Token should be passed in the `Authorization` header.
 
 ---
 
 #### ✅ **Use Cases**
 
-- Displaying a directory of employees
-- Loading profile photos and statuses in a company dashboard
-- Rendering filtered employee lists in apps or reports
+- Viewing an employee's full profile and org chart context
+- Admin panels and management dashboards
+- Auditing employee assignments and relationships
