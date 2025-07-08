@@ -12,7 +12,7 @@ This is a paired, "open-book" coding assessment. We'd like you to share your scr
 - Use open-source libraries and frameworks
 - Ask us for clarification
 
-### 🙅 You may not:
+### 🙅 You may <ins>not</ins>:
 - Re-use old work
 - Get help from another individual
 
@@ -20,31 +20,39 @@ This is a paired, "open-book" coding assessment. We'd like you to share your scr
 - Clone this repo and create a branch
 - Select a framework (or don't). Be prepared to explain your choices.
 - Select a UI framework (or don't). Be prepared to explain your choices.
-- Include unit testing with Jest. We're not looking for 100% coverage, but we'd like to see your approach to testing.
+- Our Coding Standards include unit testing with Jest. We're not looking for 100% coverage, but we'd like to see your approach to testing.
+
+### Tech Prerequisites: 
+The app will need to be able to perform / interact with the following :
+- Public API endpoints that require no authentication.
+- Public API endpoints that require JWT token.
+- Device's GPS data.
+- Biometric data.
 
 ### 📋 Your app should:
 - Display a splash screen with the Rise Logo
-- Start with an unauthenticated screen that prompts users to log in with a username and password.
-- Once authenticated, your app should display three tabs:
-  - HomeTab:
-    - Card with decoded JWT token, displaying `user_email` at top
-    - Have a card that shows current GPS location
+- Start with an unauthenticated screen that prompts users to log in with a username and password. The API (token) response will be used throughout the app.
+- Once authenticated, your app should have a layout that has a Tabs at the bottom of the screen:
+  - HomeTab(Initial Tab) - A screen with Two Cards:
+    - a Card with decoded JWT token information where the CardTitle displays the `user_email` at top, and the content shows the `uta` payload.
+    - a Card with a GPS payload from the device.
   - Empty Tab
-    - It should be empty!
+    - A screen that shows no content.
   - Profile Tab
-    - Display additional information returned from this API end point
+    - Display additional information returned from the `Employeees` API end point
       - A card with user's name and title
       - A working log-out button
       - Button to enrol biometrics
 
-## Relevant APIs:
+## APIs:
 
 ### Test Credentials
-- `j.d.@example.com` / `FakePassword1`
+- id: `j.d.@example.com`
+- password: `FakePassword1`
 
 ---
 
-### 📘 `POST /tokens/with_refresh_token`
+### 📘 Login API:  POST `/tokens/with_refresh_token`
 
 Authenticate a user and retrieve an access token and refresh token for subsequent authorized requests.
 
@@ -53,7 +61,7 @@ Authenticate a user and retrieve an access token and refresh token for subsequen
 #### 📍 **Endpoint**
 
 ```
-POST https://gateway-test.risepeople.com/tokens/with_refresh_token
+https://gateway-test.risepeople.com/tokens/with_refresh_token
 ```
 
 ---
@@ -93,27 +101,23 @@ Send a JSON object containing the user’s credentials:
 
 ```json
 {
-  "access_token": "string",
-  "refresh_token": "string",
-  "expires_in": 3600,
-  "token_type": "Bearer"
+  "auth_token": "string",
+  "refresh_token": "string"
 }
 ```
 
 #### Response Field Descriptions:
 
-| Field           | Type     | Description                              |
-|------------------|----------|------------------------------------------|
-| `access_token`   | string   | Token to be used in authenticated requests |
-| `refresh_token`  | string   | Token used to refresh the access token     |
-| `expires_in`     | number   | Expiration time of the access token (seconds) |
-| `token_type`     | string   | Type of token (usually `"Bearer"`)         |
+| Field            | Type     | Description                               |
+|------------------|----------|-------------------------------------------|
+| `auth_token`     | string   | Token to be used in authenticated requests|
+| `refresh_token`  | string   | Token used to refresh the access token    |
 
 ---
 
 #### 🔒 **Security Notes**
 - This endpoint transmits **sensitive credentials**, so ensure the request is made over **HTTPS**.
-- Do not log or expose the `password`, `access_token`, or `refresh_token`.
+- Do not expose the `password`, `access_token`, or `refresh_token` to the UI.
 
 ---
 
@@ -125,7 +129,7 @@ Send a JSON object containing the user’s credentials:
 
 ---
 
-### 📘 `GET /employees/:id`
+### 📘 Employee API: GET `/employees/:id`
 
 Retrieve detailed information about a specific employee, including their organizational structure, assignments, and relationships.
 
@@ -134,7 +138,7 @@ Retrieve detailed information about a specific employee, including their organiz
 #### 📍 **Endpoint**
 
 ```
-GET https://gateway-test.risepeople.com/employees/295029?include=departments,teams,locations,primary_team,primary_department,primary_location,primary_manager,managers,employee_photo,employment_positions,organization&fields[departments]=name&fields[teams]=name&fields[locations]=name
+https://gateway-test.risepeople.com/employees/{id}?include=departments,teams,locations,primary_team,primary_department,primary_location,primary_manager,managers,employee_photo,employment_positions,organization&fields[departments]=name&fields[teams]=name&fields[locations]=name
 ```
 
 ---
@@ -144,17 +148,17 @@ GET https://gateway-test.risepeople.com/employees/295029?include=departments,tea
 | Header           | Value                                 | Description                                       |
 |------------------|---------------------------------------|---------------------------------------------------|
 | `Accept`         | `application/json, text/plain, */*`   | Expected response format                          |
-| `Authorization`  | `Bearer <JWT>`                        | JWT token for authorization                       |
+| `Authorization`  | `<JWT>`                               | Auth_Token from login API for authorization       |
 
-> ⚠️ For security, replace the actual token with `<JWT>` in documentation.
+> ⚠️ Do not include the `Bearer` word in the Authorization Header, just use the token value instaed.
 
 ---
 
 #### 🔍 **Query Parameters**
 
 | Parameter                       | Type     | Description                                                       |
-|----------------------------------|----------|-------------------------------------------------------------------|
-| `include`                        | string   | Comma-separated list of related resources to include              |
+|---------------------------------|----------|-------------------------------------------------------------------|
+| `include`                       | string   | Comma-separated list of related resources to include              |
 | `fields[departments]=name`      | string   | Restrict department fields to only include the `name` attribute   |
 | `fields[teams]=name`            | string   | Restrict team fields to only include the `name` attribute         |
 | `fields[locations]=name`        | string   | Restrict location fields to only include the `name` attribute     |
@@ -180,6 +184,7 @@ GET https://gateway-test.risepeople.com/employees/295029?include=departments,tea
     "attributes": {
       "name": "John Doe",
       "current_status": "Active",
+      "title": "Current Title",
       ...
     },
     "relationships": {
@@ -206,12 +211,6 @@ GET https://gateway-test.risepeople.com/employees/295029?include=departments,tea
 
 ---
 
-#### 🔐 **Authentication**
-
-- Requires a valid JWT token with permission to access employee data.
-- Token should be passed in the `Authorization` header.
-
----
 
 #### ✅ **Use Cases**
 
